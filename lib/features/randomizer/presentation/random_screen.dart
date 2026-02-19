@@ -17,6 +17,27 @@ class _RandomScreenState extends ConsumerState<RandomScreen> {
   double _rotation = 0;
   bool _isSpinning = false;
 
+  /// Calculate which meal is under the top indicator based on rotation
+  Meal _getWinningMeal(List<Meal> meals, double rotation) {
+    final mealCount = meals.length;
+    final sliceAngle = (2 * pi) / mealCount;
+
+    // Convert rotation (turns) to radians and normalize to [0, 2π)
+    final rotationRadians = (rotation * 2 * pi) % (2 * pi);
+
+    // The indicator is at the top. After the wheel rotates clockwise by rotationRadians,
+    // the slice that ends up under the indicator was originally at angle: -rotationRadians
+    // Normalize to positive angle in [0, 2π)
+    final effectiveAngle = (2 * pi - rotationRadians) % (2 * pi);
+
+    // Find which slice contains this angle
+    // Slice i covers from (i * sliceAngle) to ((i + 1) * sliceAngle)
+    // Since slices start at -π/2 (top), we need to adjust
+    final winningIndex = (effectiveAngle / sliceAngle).floor() % mealCount;
+
+    return meals[winningIndex];
+  }
+
   void _spinWheel(List<Meal> meals) {
     if (_isSpinning) return;
 
@@ -28,12 +49,13 @@ class _RandomScreenState extends ConsumerState<RandomScreen> {
     // Increment count using Riverpod
     ref.read(randomCountProvider.notifier).state++;
 
-    // Wait for "animation" to finish
+    // Wait for animation to finish
     Future.delayed(const Duration(seconds: 2), () {
       if (!mounted) return;
       setState(() => _isSpinning = false);
 
-      final result = meals[Random().nextInt(meals.length)];
+      // Get the winning meal based on where the wheel stopped
+      final result = _getWinningMeal(meals, _rotation);
       _onSpinComplete(result);
     });
   }
@@ -99,11 +121,16 @@ class _RandomScreenState extends ConsumerState<RandomScreen> {
     if (!mounted) return;
     setState(() => _isSpinning = false);
 
-    // Add to history list - check if same as previous (top) entry
+    // Add to history list - check if meal already exists anywhere in history
     ref.read(historyProvider.notifier).update((state) {
-      if (state.isNotEmpty && state.first.meal.name == result.name) {
-        // Increment count of the top entry
-        state.first.count++;
+      // Find if this meal already exists in history
+      final existingIndex = state.indexWhere(
+        (entry) => entry.meal.name == result.name,
+      );
+
+      if (existingIndex != -1) {
+        // Meal exists - increment its count
+        state[existingIndex].count++;
         return [...state]; // Return new list to trigger rebuild
       } else {
         // Add new entry at the top

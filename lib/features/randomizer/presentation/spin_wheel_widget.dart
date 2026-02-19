@@ -19,16 +19,6 @@ class SpinWheelWidget extends StatelessWidget {
     return Stack(
       alignment: Alignment.center,
       children: [
-        // Arrow Indicator at Top
-        Positioned(
-          top: 0,
-          child: SizedBox(
-            width: wheelSize,
-            height: 40,
-            child: CustomPaint(painter: ArrowPainter()),
-          ),
-        ),
-
         // Rotating Wheel
         AnimatedRotation(
           turns: rotation,
@@ -38,6 +28,16 @@ class SpinWheelWidget extends StatelessWidget {
             width: wheelSize,
             height: wheelSize,
             child: CustomPaint(painter: SpinWheelPainter(meals)),
+          ),
+        ),
+
+        // Winner Indicator Triangle at top pointing to center
+        Positioned(
+          top: 0,
+          child: SizedBox(
+            width: 40,
+            height: 30,
+            child: CustomPaint(painter: WinnerIndicatorPainter()),
           ),
         ),
       ],
@@ -169,33 +169,33 @@ class SpinWheelPainter extends CustomPainter {
   }
 }
 
-class ArrowPainter extends CustomPainter {
+class WinnerIndicatorPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = Colors.red
       ..style = PaintingStyle.fill;
 
-    final center = Offset(size.width / 2, size.height);
-    final arrowSize = 20.0;
-
-    // Draw arrow pointing down (to wheel)
+    // Triangle pointing down (toward the center of the wheel)
     final path = Path()
-      ..moveTo(center.dx, 0) // tip of arrow
-      ..lineTo(center.dx - arrowSize, arrowSize) // left
-      ..lineTo(center.dx + arrowSize, arrowSize) // right
+      ..moveTo(
+        size.width / 2,
+        size.height,
+      ) // tip of arrow pointing down (toward center)
+      ..lineTo(0, 0) // top left corner
+      ..lineTo(size.width, 0) // top right corner
       ..close();
 
     canvas.drawPath(path, paint);
 
     // Draw stroke for visibility
     final strokePaint = Paint()
-      ..color = Colors.redAccent
+      ..color = Colors.black
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
     canvas.drawPath(path, strokePaint);
   }
 
   @override
-  bool shouldRepaint(ArrowPainter oldDelegate) => false;
+  bool shouldRepaint(WinnerIndicatorPainter oldDelegate) => false;
 }
