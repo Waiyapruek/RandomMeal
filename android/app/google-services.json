@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "534678766338",
+    "project_id": "randommeal108",
+    "storage_bucket": "randommeal108.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:534678766338:android:a93192ec72c93483f1781b",
+        "android_client_info": {
+          "package_name": "com.example.randommeal"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9ttsDLXfPW3knXjFchtm3w1z5PcwB2sU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

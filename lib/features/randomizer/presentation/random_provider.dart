@@ -9,8 +9,31 @@ class HistoryEntry {
   HistoryEntry({required this.meal, this.count = 1});
 }
 
-// Tracks how many times the user has hit 'Random'
-final randomCountProvider = StateProvider<int>((ref) => 0);
+// Per-preset spin count: keyed by presetId
+final randomCountProviders = StateProvider.family<int, String>(
+  (ref, presetId) => 0,
+);
 
-// Tracks the meals selected in the current session with counts
-final historyProvider = StateProvider<List<HistoryEntry>>((ref) => []);
+// Per-preset history: keyed by presetId
+final historyProviders = StateProvider.family<List<HistoryEntry>, String>(
+  (ref, presetId) => [],
+);
+
+// Global history (not affected by per-preset reset)
+class GlobalHistoryEntry {
+  final String presetId;
+  final String presetTitle;
+  final Meal meal;
+  final DateTime timestamp;
+
+  GlobalHistoryEntry({
+    required this.presetId,
+    required this.presetTitle,
+    required this.meal,
+    DateTime? timestamp,
+  }) : timestamp = timestamp ?? DateTime.now();
+}
+
+final globalHistoryProvider = StateProvider<List<GlobalHistoryEntry>>(
+  (ref) => [],
+);

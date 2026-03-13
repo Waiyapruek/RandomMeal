@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/theme_provider.dart';
+import '../../../core/navigation/route_names.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -30,6 +32,14 @@ class SettingsScreen extends ConsumerWidget {
                   ? ThemeMode.dark
                   : ThemeMode.light;
             },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.history),
+            title: const Text('History'),
+            subtitle: const Text('View all random results'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push(RouteNames.history),
           ),
         ],
       ),

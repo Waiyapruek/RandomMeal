@@ -1,9 +1,11 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'random_provider.dart';
 import 'spin_wheel_widget.dart';
 import '../../../models/preset.dart';
+import '../../../core/widgets/meal_detail_dialog.dart';
 
 class RandomScreen extends ConsumerStatefulWidget {
   final String presetId;
@@ -47,7 +49,7 @@ class _RandomScreenState extends ConsumerState<RandomScreen> {
     });
 
     // Increment count using Riverpod
-    ref.read(randomCountProvider.notifier).state++;
+    ref.read(randomCountProviders(widget.presetId).notifier).state++;
 
     // Wait for animation to finish
     Future.delayed(const Duration(seconds: 2), () {
@@ -63,13 +65,13 @@ class _RandomScreenState extends ConsumerState<RandomScreen> {
   void _showResultDialog(Meal meal) {
     showDialog(
       context: context,
-      barrierDismissible: false, // Force them to engage with the choice!
+      barrierDismissible: false,
       builder: (context) => _MealResultCard(meal: meal),
     );
   }
 
   void _showHistory() {
-    final history = ref.read(historyProvider);
+    final history = ref.read(historyProviders(widget.presetId));
 
     showModalBottomSheet(
       context: context,
@@ -122,7 +124,7 @@ class _RandomScreenState extends ConsumerState<RandomScreen> {
     setState(() => _isSpinning = false);
 
     // Add to history list - check if meal already exists anywhere in history
-    ref.read(historyProvider.notifier).update((state) {
+    ref.read(historyProviders(widget.presetId).notifier).update((state) {
       // Find if this meal already exists in history
       final existingIndex = state.indexWhere(
         (entry) => entry.meal.name == result.name,
@@ -138,17 +140,30 @@ class _RandomScreenState extends ConsumerState<RandomScreen> {
       }
     });
 
+    // Also add to global history (persists across resets)
+    final preset = mockPresets.firstWhere((p) => p.id == widget.presetId);
+    ref.read(globalHistoryProvider.notifier).update((state) {
+      return [
+        GlobalHistoryEntry(
+          presetId: widget.presetId,
+          presetTitle: preset.title,
+          meal: result,
+        ),
+        ...state,
+      ];
+    });
+
     _showResultDialog(result);
   }
 
-  void _resetSession() {
+  void _resetResult() {
     // Manually resetting the state of both providers
-    ref.read(randomCountProvider.notifier).state = 0;
-    ref.read(historyProvider.notifier).state = [];
+    ref.read(randomCountProviders(widget.presetId).notifier).state = 0;
+    ref.read(historyProviders(widget.presetId).notifier).state = [];
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Session reset!'),
+        content: Text('Reset result!'),
         duration: Duration(seconds: 1),
       ),
     );
@@ -156,18 +171,22 @@ class _RandomScreenState extends ConsumerState<RandomScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final count = ref.watch(randomCountProvider);
+    final count = ref.watch(randomCountProviders(widget.presetId));
     final preset = mockPresets.firstWhere((p) => p.id == widget.presetId);
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/presets/${widget.presetId}'),
+        ),
         title: const Text('The Decider'),
         actions: [
           // The Manual Reset Button
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _resetSession,
-            tooltip: 'Reset Session',
+            onPressed: _resetResult,
+            tooltip: 'Reset result',
           ),
         ],
       ),
@@ -220,64 +239,84 @@ class _MealResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Column(
-        mainAxisSize: MainAxisSize.min, // Wrap content
-        children: [
-          // 1. Image Placeholder
-          Container(
-            height: 200,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
+      backgroundColor: colorScheme.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 400),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Meal image
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: meal.imageUrl != null
+                      ? Image.network(
+                          meal.imageUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: colorScheme.primaryContainer,
+                            child: Icon(
+                              Icons.restaurant,
+                              size: 64,
+                              color: colorScheme.onPrimaryContainer,
+                            ),
+                          ),
+                        )
+                      : Container(
+                          color: colorScheme.primaryContainer,
+                          child: Icon(
+                            Icons.restaurant,
+                            size: 64,
+                            color: colorScheme.onPrimaryContainer,
+                          ),
+                        ),
+                ),
               ),
-            ),
-            child: meal.imageUrl != null
-                ? Image.network(meal.imageUrl!, fit: BoxFit.cover)
-                : const Icon(Icons.restaurant, size: 80, color: Colors.grey),
-          ),
-
-          // 2. Info Section
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                Text(
-                  meal.name,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  meal.detail,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey[600]),
-                ),
-                const SizedBox(height: 20),
-
-                // 3. Action Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+              // Meal details
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      meal.name,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
                       ),
                     ),
-                    child: const Text('Let\'s Eat!'),
-                  ),
+                    const SizedBox(height: 12),
+                    Text(
+                      meal.detail,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              // Action button
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Let\'s Eat!'),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

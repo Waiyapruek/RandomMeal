@@ -11,12 +11,13 @@ class SpinWheelWidget extends StatelessWidget {
     super.key,
     required this.meals,
     required this.rotation,
-    this.wheelSize = 250,
+    this.wheelSize = 350,
   });
 
   @override
   Widget build(BuildContext context) {
     return Stack(
+      clipBehavior: Clip.none,
       alignment: Alignment.center,
       children: [
         // Rotating Wheel
@@ -33,7 +34,7 @@ class SpinWheelWidget extends StatelessWidget {
 
         // Winner Indicator Triangle at top pointing to center
         Positioned(
-          top: 0,
+          top: -10,
           child: SizedBox(
             width: 40,
             height: 30,
@@ -50,12 +51,45 @@ class SpinWheelPainter extends CustomPainter {
 
   SpinWheelPainter(this.meals);
 
+  static const double _margin = 16.0;
+  static const double _defaultFontSize = 18.0;
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
     final mealCount = meals.length;
     final sliceAngle = (2 * pi) / mealCount;
+
+    // Calculate available radial space for text (with margins from center and edge)
+    final maxTextWidth = radius - 2 * _margin;
+
+    // Measure the longest meal name at default font size
+    double longestWidth = 0;
+    for (final meal in meals) {
+      final tp = TextPainter(
+        text: TextSpan(
+          text: meal.name,
+          style: const TextStyle(
+            fontSize: _defaultFontSize,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      tp.layout();
+      if (tp.width > longestWidth) {
+        longestWidth = tp.width;
+      }
+    }
+
+    // Scale font size down if the longest text exceeds available space
+    final fontSize = (longestWidth > maxTextWidth && maxTextWidth > 0)
+        ? _defaultFontSize * (maxTextWidth / longestWidth)
+        : _defaultFontSize;
+
+    // Text center positioned in the middle of the available radial space
+    final textRadius = _margin + maxTextWidth / 2;
 
     final paint = Paint()..style = PaintingStyle.fill;
     final strokePaint = Paint()
@@ -106,10 +140,11 @@ class SpinWheelPainter extends CustomPainter {
       _drawMealName(
         canvas,
         center,
-        radius,
+        textRadius,
         startAngle,
         sweepAngle,
         meals[i].name,
+        fontSize,
       );
     }
 
@@ -120,16 +155,16 @@ class SpinWheelPainter extends CustomPainter {
   void _drawMealName(
     Canvas canvas,
     Offset center,
-    double radius,
+    double textRadius,
     double startAngle,
     double sweepAngle,
     String mealName,
+    double fontSize,
   ) {
     // Calculate the angle at middle of the slice
     final midAngle = startAngle + sweepAngle / 2;
 
-    // Position text at 60% of radius from center
-    final textRadius = radius * 0.6;
+    // Position text at the computed textRadius from center
     final textOffset = Offset(
       center.dx + textRadius * cos(midAngle),
       center.dy + textRadius * sin(midAngle),
@@ -139,9 +174,9 @@ class SpinWheelPainter extends CustomPainter {
     final textPainter = TextPainter(
       text: TextSpan(
         text: mealName,
-        style: const TextStyle(
+        style: TextStyle(
           color: Colors.black,
-          fontSize: 18,
+          fontSize: fontSize,
           fontWeight: FontWeight.bold,
         ),
       ),
