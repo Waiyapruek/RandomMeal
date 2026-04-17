@@ -19,93 +19,175 @@ void showMealDetailDialog(
       final colorScheme = theme.colorScheme;
 
       return Dialog(
-        backgroundColor: colorScheme.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400),
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(20),
+        child: Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 20,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          constraints: const BoxConstraints(maxWidth: 420),
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Decorative top indicator
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: colorScheme.outlineVariant,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                ),
                 // Meal image
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(16),
+                    top: Radius.circular(24),
                   ),
-                  child: AspectRatio(
-                    aspectRatio: 16 / 9,
-                    child: meal.imageUrl != null
-                        ? Image.network(
-                            meal.imageUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              color: colorScheme.primaryContainer,
-                              child: Icon(
-                                Icons.restaurant,
-                                size: 64,
-                                color: colorScheme.onPrimaryContainer,
-                              ),
-                            ),
-                          )
-                        : Container(
-                            color: colorScheme.primaryContainer,
-                            child: Icon(
-                              Icons.restaurant,
-                              size: 64,
-                              color: colorScheme.onPrimaryContainer,
-                            ),
-                          ),
-                  ),
-                ),
-                // Meal details
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Stack(
                     children: [
-                      Text(
-                        meal.name,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurface,
-                        ),
+                      AspectRatio(
+                        aspectRatio: 16 / 9,
+                        child: meal.imageUrl != null
+                            ? Image.network(
+                                meal.imageUrl!,
+                                fit: BoxFit.cover,
+                                loadingBuilder:
+                                    (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Container(
+                                    color:
+                                        colorScheme.surfaceContainerHighest,
+                                    child: const Center(
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                errorBuilder: (_, __, ___) => Container(
+                                  color:
+                                      colorScheme.surfaceContainerHighest,
+                                  child: Icon(
+                                    Icons.restaurant_rounded,
+                                    size: 64,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              )
+                            : Container(
+                                color: colorScheme.surfaceContainerHighest,
+                                child: Icon(
+                                  Icons.restaurant_rounded,
+                                  size: 64,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
                       ),
-                      if (subtitle != null) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          subtitle,
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: colorScheme.primary,
+                      // Overlay gradient
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.2),
+                            ],
                           ),
-                        ),
-                      ],
-                      if (timestamp != null) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          DateFormat('dd/MM/yy – HH:mm').format(timestamp),
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 12),
-                      Text(
-                        meal.detail,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                          height: 1.5,
                         ),
                       ),
                     ],
                   ),
                 ),
-                // Close button
+                // Meal details
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                  child: TextButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(),
-                    child: const Text('Close'),
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        meal.name,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colorScheme.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            subtitle,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                      if (timestamp != null) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.schedule_rounded,
+                              size: 14,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              DateFormat('dd/MM/yy – HH:mm').format(timestamp),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      Text(
+                        meal.detail,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          height: 1.6,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      // Close button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: FilledButton.icon(
+                          icon: const Icon(Icons.close_rounded),
+                          label: const Text('Close'),
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],

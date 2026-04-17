@@ -4,7 +4,6 @@ import 'package:randommeal/features/randomizer/presentation/random_screen.dart';
 import 'package:randommeal/features/presets/presentation/preset_detail_screen.dart';
 import 'package:randommeal/features/settings/presentation/settings_screen.dart';
 import 'package:randommeal/features/history/presentation/history_screen.dart';
-import 'package:randommeal/features/presets/presentation/custom_preset_screen.dart';
 import 'route_names.dart';
 
 /// Application routes configuration
@@ -12,10 +11,6 @@ final List<RouteBase> appRoutes = [
   GoRoute(
     path: RouteNames.home,
     builder: (context, state) => const HomeScreen(),
-  ),
-  GoRoute(
-    path: RouteNames.customPreset,
-    builder: (context, state) => const CustomPresetScreen(),
   ),
   GoRoute(
     path: RouteNames.presetDetail,

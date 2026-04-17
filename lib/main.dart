@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:randommeal/core/theme/theme_provider.dart';
+import 'firebase_options.dart';
 import 'core/navigation/app_router.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   usePathUrlStrategy(); // Enable clean URLs without #
   runApp(
     const ProviderScope(
@@ -25,8 +31,8 @@ class RandomMealApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'RandomMeal',
       themeMode: themeMode,
-      theme: ThemeData(brightness: Brightness.light),
-      darkTheme: ThemeData(brightness: Brightness.dark),
+      theme: lightTheme,
+      darkTheme: darkTheme,
       routerConfig: AppRouter.router,
     );
   }

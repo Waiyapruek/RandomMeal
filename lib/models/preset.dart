@@ -10,6 +10,26 @@ class Meal {
     this.imageUrl,
     required this.category,
   });
+
+  // Convert Firestore data to Meal object
+  factory Meal.fromJson(Map<String, dynamic> json) {
+    return Meal(
+      name: json['name'] as String,
+      detail: json['detail'] as String,
+      imageUrl: json['imageUrl'] as String?,
+      category: json['category'] as String,
+    );
+  }
+
+  // Convert Meal object to Firestore data
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'detail': detail,
+      'imageUrl': imageUrl,
+      'category': category,
+    };
+  }
 }
 
 // Update our Preset model to include meals
@@ -29,6 +49,31 @@ class Preset {
     required this.category,
     this.imageUrl,
   });
+
+  // Convert Firestore data to Preset object
+  factory Preset.fromJson(String id, Map<String, dynamic> json) {
+    return Preset(
+      id: id,
+      title: json['title'] as String,
+      description: json['description'] as String,
+      category: json['category'] as String,
+      imageUrl: json['imageUrl'] as String?,
+      meals: ((json['meals'] as List<dynamic>?) ?? [])
+          .map((meal) => Meal.fromJson(meal as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  // Convert Preset object to Firestore data
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'description': description,
+      'category': category,
+      'imageUrl': imageUrl,
+      'meals': meals.map((meal) => meal.toJson()).toList(),
+    };
+  }
 }
 
 // Mutable list so custom presets can be added at runtime
@@ -51,6 +96,7 @@ final List<Preset> mockPresets = [
     ],
     description: 'Carbohydrate meal',
     category: 'Budget',
+    imageUrl: 'https://images.unsplash.com/photo-1584622181563-430f63602d4b?w=500&h=500&fit=crop',
   ),
   Preset(
     id: '2',
@@ -74,5 +120,6 @@ final List<Preset> mockPresets = [
     ],
     description: 'Noodle dishes from around the world',
     category: 'Noodles',
+    imageUrl: 'https://www.kitchensanctuary.com/wp-content/uploads/2024/03/Sesame-Noodles-tall-FS.jpg',
   ),
 ];

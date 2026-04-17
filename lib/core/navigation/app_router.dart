@@ -5,7 +5,6 @@ import '../../features/randomizer/presentation/random_screen.dart';
 import '../../features/presets/presentation/preset_detail_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/history/presentation/history_screen.dart';
-import '../../features/presets/presentation/custom_preset_screen.dart';
 import 'route_names.dart';
 
 class AppRouter {
@@ -16,10 +15,6 @@ class AppRouter {
       GoRoute(
         path: RouteNames.home,
         builder: (context, state) => const HomeScreen(),
-      ),
-      GoRoute(
-        path: RouteNames.customPreset,
-        builder: (context, state) => const CustomPresetScreen(),
       ),
       GoRoute(
         path: RouteNames.presetDetail,
