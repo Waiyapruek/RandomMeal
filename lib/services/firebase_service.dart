@@ -7,36 +7,19 @@ class FirebaseService {
 
   // Fetch all presets from Firestore
   Future<List<Preset>> fetchPresets() async {
-    try {
-      final snapshot = await _firestore.collection('presets').get();
-      if (snapshot.docs.isEmpty) {
-        print('No presets in Firestore, using mock data');
-        return mockPresets;
-      }
-      return snapshot.docs
-          .map((doc) => Preset.fromJson(doc.id, doc.data()))
-          .toList();
-    } catch (e) {
-      print('Error fetching presets: $e, using mock data');
-      return mockPresets;
-    }
+    final snapshot = await _firestore.collection('presets').get();
+    return snapshot.docs
+        .map((doc) => Preset.fromJson(doc.id, doc.data()))
+        .toList();
   }
 
   // Fetch a single preset by ID
   Future<Preset?> fetchPresetById(String presetId) async {
-    try {
-      final doc = await _firestore.collection('presets').doc(presetId).get();
-      if (doc.exists) {
-        return Preset.fromJson(doc.id, doc.data()!);
-      }
-      // Fallback to mock data
-      final mockData = mockPresets.where((p) => p.id == presetId).toList();
-      return mockData.isNotEmpty ? mockData.first : null;
-    } catch (e) {
-      print('Error fetching preset: $e, using mock data');
-      final mockData = mockPresets.where((p) => p.id == presetId).toList();
-      return mockData.isNotEmpty ? mockData.first : null;
+    final doc = await _firestore.collection('presets').doc(presetId).get();
+    if (doc.exists) {
+      return Preset.fromJson(doc.id, doc.data()!);
     }
+    return null;
   }
 
   // Save a preset to Firestore

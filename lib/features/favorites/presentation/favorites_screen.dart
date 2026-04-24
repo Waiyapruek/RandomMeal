@@ -1,140 +1,150 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:RandomMeal/models/preset.dart';
 import '../../../core/widgets/meal_detail_dialog.dart';
+import '../../../models/preset.dart';
+import '../../../core/navigation/route_names.dart';
 import '../../../core/utils/image_utils.dart';
-import '../../../services/firebase_service.dart';
-import '../../favorites/presentation/favorites_provider.dart';
+import 'favorites_provider.dart';
 
-class PresetDetailScreen extends ConsumerWidget {
-  final String? presetId;
-  final String? presetName;
-
-  const PresetDetailScreen({super.key, this.presetId, this.presetName});
+class FavoritesScreen extends ConsumerWidget {
+  const FavoritesScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (presetId == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Preset Details')),
-        body: const Center(child: Text('No preset selected')),
-      );
-    }
+    final favoritesAsync = ref.watch(favoriteMealsDetailsProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-    final presetAsync = ref.watch(presetByIdProvider(presetId!));
-
-    return presetAsync.when(
-      loading: () => Scaffold(
-        appBar: AppBar(title: const Text('Loading...')),
-        body: const Center(child: CircularProgressIndicator()),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Favorite Meals'),
+        elevation: 0,
       ),
-      error: (error, stackTrace) => Scaffold(
-        appBar: AppBar(title: const Text('Error')),
-        body: const Center(child: Text("Can't read database")),
-      ),
-      data: (preset) {
-        if (preset == null) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Not Found')),
-            body: const Center(child: Text('Preset not found')),
-          );
-        }
-        
-        final displayName = presetName ?? preset.title;
-        final meals = preset.meals;
-        final theme = Theme.of(context);
-        final colorScheme = theme.colorScheme;
-
-        return Scaffold(
-          appBar: AppBar(
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_rounded),
-              onPressed: () => context.go('/home'),
-            ),
-            title: Text(displayName),
-          ),
-          body: Column(
+      body: favoritesAsync.when(
+        loading: () => const Center(
+          child: CircularProgressIndicator(),
+        ),
+        error: (error, stackTrace) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Meal grid
-              Expanded(
-                child: meals.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.restaurant_menu_rounded,
-                              size: 56,
-                              color: colorScheme.onSurfaceVariant
-                                  .withOpacity(0.5),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No meals in this preset',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : GridView.builder(
-                        padding: const EdgeInsets.only(
-                          top: 12,
-                          left: 16,
-                          right: 16,
-                          bottom: 16,
-                        ),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: 0.9,
-                        ),
-                        itemCount: meals.length,
-                        itemBuilder: (context, index) {
-                          final meal = meals[index];
-                          return _MealCard(
-                            meal: meal,
-                            onTap: () =>
-                                showMealDetailDialog(context, meal),
-                          );
-                        },
-                      ),
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: colorScheme.error.withOpacity(0.5),
               ),
-              // Confirm & Spin button
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: FilledButton.icon(
-                      onPressed: presetId != null
-                          ? () => context.go('/presets/$presetId/random')
-                          : null,
-                      icon: const Icon(Icons.casino_rounded),
-                      label: const Text('Confirm & Spin'),
-                    ),
-                  ),
-                ),
+              const SizedBox(height: 16),
+              Text(
+                "Can't read database",
+                style: theme.textTheme.titleLarge,
               ),
             ],
           ),
-        );
-      },
+        ),
+        data: (favoriteMeals) => favoriteMeals.isEmpty
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.favorite_border_rounded,
+                        size: 40,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'No Favorites Yet',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Text(
+                        'Add meals to favorites by tapping the heart icon.',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : GridView.builder(
+                padding: const EdgeInsets.all(16),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 0.9,
+                ),
+                itemCount: favoriteMeals.length,
+                itemBuilder: (context, index) {
+                  final meal = favoriteMeals[index];
+                  return _FavoriteMealCard(
+                    meal: meal,
+                    onTap: () => showMealDetailDialog(context, meal),
+                  );
+                },
+              ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 1,
+        elevation: 8,
+        backgroundColor: colorScheme.surface,
+        selectedItemColor: colorScheme.primary,
+        unselectedItemColor: colorScheme.onSurfaceVariant.withOpacity(0.6),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_rounded),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite_rounded),
+            label: 'Favorites',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history_rounded),
+            label: 'History',
+          ),
+        ],
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              context.go(RouteNames.home);
+              break;
+            case 1:
+              context.go(RouteNames.favorites);
+              break;
+            case 2:
+              context.go(RouteNames.history);
+              break;
+          }
+        },
+      ),
     );
   }
 }
 
-class _MealCard extends ConsumerWidget {
+class _FavoriteMealCard extends ConsumerWidget {
   final Meal meal;
   final VoidCallback onTap;
 
-  const _MealCard({required this.meal, required this.onTap});
+  const _FavoriteMealCard({
+    required this.meal,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -147,7 +157,7 @@ class _MealCard extends ConsumerWidget {
       onTap: onTap,
       child: Card(
         elevation: 3,
-        shadowColor: colorScheme.primary.withOpacity(0.12),
+        shadowColor: colorScheme.error.withOpacity(0.12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         clipBehavior: Clip.antiAlias,
         child: Container(
@@ -165,7 +175,7 @@ class _MealCard extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Upper section — image with overlay
+              // Image section with favorite button
               Expanded(
                 flex: 50,
                 child: Stack(
@@ -173,7 +183,7 @@ class _MealCard extends ConsumerWidget {
                   children: [
                     meal.imageUrl != null
                         ? Image.network(
-                            optimizeImageUrl(meal.imageUrl, width: 500, height: 400),
+                            optimizeImageUrl(meal.imageUrl, width: 400, height: 350),
                             fit: BoxFit.cover,
                             loadingBuilder:
                                 (context, child, loadingProgress) {
@@ -206,7 +216,7 @@ class _MealCard extends ConsumerWidget {
                               color: colorScheme.onSurfaceVariant,
                             ),
                           ),
-                    // Gradient overlay for better text readability
+                    // Overlay gradient
                     Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -247,7 +257,7 @@ class _MealCard extends ConsumerWidget {
                   ],
                 ),
               ),
-              // Lower section — meal info
+              // Details section
               Expanded(
                 flex: 50,
                 child: Padding(

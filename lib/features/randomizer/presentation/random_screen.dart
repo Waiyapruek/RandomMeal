@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/utils/image_utils.dart';
 import 'random_provider.dart';
 import 'spin_wheel_widget.dart';
 import '../../../models/preset.dart';
@@ -70,6 +71,97 @@ class _RandomScreenState extends ConsumerState<RandomScreen> {
     );
   }
 
+  void _showMealsList() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final presetAsync = ref.watch(presetByIdProvider(widget.presetId));
+
+    presetAsync.whenData((preset) {
+      if (preset == null) return;
+
+      showModalBottomSheet(
+        context: context,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (context) => Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: colorScheme.outlineVariant,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+                margin: const EdgeInsets.only(bottom: 16),
+              ),
+              Text(
+                'Meals (${preset.meals.length})',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const Divider(height: 24),
+              Expanded(
+                child: preset.meals.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.restaurant_menu_rounded,
+                              size: 48,
+                              color: colorScheme.onSurfaceVariant
+                                  .withOpacity(0.5),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No meals available',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.separated(
+                        itemCount: preset.meals.length,
+                        separatorBuilder: (_, __) => Divider(
+                          color: colorScheme.outlineVariant.withOpacity(0.3),
+                        ),
+                        itemBuilder: (context, index) {
+                          final meal = preset.meals[index];
+                          return ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(
+                              meal.name,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            subtitle: meal.detail != null && meal.detail!.isNotEmpty
+                                ? Text(
+                                    meal.detail!,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  )
+                                : null,
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
   void _showHistory() {
     final history = ref.read(historyProviders(widget.presetId));
     final theme = Theme.of(context);
@@ -122,11 +214,11 @@ class _RandomScreenState extends ConsumerState<RandomScreen> {
                         ],
                       ),
                     )
-                  : ListView.separated(
-                      itemCount: history.length,
-                      separatorBuilder: (_, __) => Divider(
-                        color: colorScheme.outlineVariant.withOpacity(0.3),
-                      ),
+                    : ListView.separated(
+                        itemCount: history.length,
+                        separatorBuilder: (_, __) => Divider(
+                          color: colorScheme.outlineVariant.withOpacity(0.3),
+                        ),
                       itemBuilder: (context, index) {
                         final entry = history[index];
                         return ListTile(
@@ -153,7 +245,7 @@ class _RandomScreenState extends ConsumerState<RandomScreen> {
                             ),
                           ),
                           subtitle: Text(
-                            entry.meal.detail,
+                            entry.meal.detail ?? 'No details',
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                             ),
@@ -266,7 +358,7 @@ class _RandomScreenState extends ConsumerState<RandomScreen> {
       ),
       error: (error, stackTrace) => Scaffold(
         appBar: AppBar(title: const Text('Error')),
-        body: Center(child: Text('Error loading preset: $error')),
+        body: const Center(child: Text("Can't read database")),
       ),
       data: (preset) {
         if (preset == null) {
@@ -379,6 +471,7 @@ class _RandomScreenState extends ConsumerState<RandomScreen> {
                               onPressed: _showHistory,
                               color: colorScheme.primary,
                               iconSize: 28,
+                              tooltip: 'View history',
                             ),
                           ),
                           const SizedBox(width: 20),
@@ -393,6 +486,20 @@ class _RandomScreenState extends ConsumerState<RandomScreen> {
                                 horizontal: 32,
                                 vertical: 16,
                               ),
+                            ),
+                          ),
+                          const SizedBox(width: 20),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: IconButton(
+                              icon: const Icon(Icons.restaurant_menu_rounded),
+                              onPressed: _showMealsList,
+                              color: colorScheme.primary,
+                              iconSize: 28,
+                              tooltip: 'View meals',
                             ),
                           ),
                         ],
@@ -469,7 +576,7 @@ class _MealResultCard extends StatelessWidget {
                         aspectRatio: 16 / 9,
                         child: meal.imageUrl != null
                             ? Image.network(
-                                meal.imageUrl!,
+                                optimizeImageUrl(meal.imageUrl, width: 800, height: 450),
                                 fit: BoxFit.cover,
                                 loadingBuilder:
                                     (context, child, loadingProgress) {
@@ -535,7 +642,7 @@ class _MealResultCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        meal.detail,
+                        meal.detail ?? 'No details available',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                           height: 1.6,

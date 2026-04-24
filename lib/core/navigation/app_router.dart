@@ -5,6 +5,7 @@ import '../../features/randomizer/presentation/random_screen.dart';
 import '../../features/presets/presentation/preset_detail_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/history/presentation/history_screen.dart';
+import '../../features/favorites/presentation/favorites_screen.dart';
 import 'route_names.dart';
 
 class AppRouter {
@@ -14,36 +15,60 @@ class AppRouter {
     routes: [
       GoRoute(
         path: RouteNames.home,
-        builder: (context, state) => const HomeScreen(),
+        pageBuilder: (context, state) => MaterialPage(
+          name: state.name,
+          child: const HomeScreen(),
+        ),
       ),
       GoRoute(
         path: RouteNames.presetDetail,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.pathParameters['id'];
-          final name = state.uri.queryParameters['name'];
-          return PresetDetailScreen(presetId: id, presetName: name);
+          return MaterialPage(
+            name: state.name,
+            child: PresetDetailScreen(presetId: id),
+          );
         },
         routes: [
           GoRoute(
             path: 'random',
-            builder: (context, state) {
+            pageBuilder: (context, state) {
               final presetId = state.pathParameters['id']!;
-              return RandomScreen(presetId: presetId);
+              return MaterialPage(
+                name: state.name,
+                child: RandomScreen(presetId: presetId),
+              );
             },
           ),
         ],
       ),
       GoRoute(
         path: RouteNames.presets,
-        builder: (context, state) => const PresetDetailScreen(),
+        pageBuilder: (context, state) => MaterialPage(
+          name: state.name,
+          child: const PresetDetailScreen(),
+        ),
       ),
       GoRoute(
         path: '/settings',
-        builder: (context, state) => const SettingsScreen(),
+        pageBuilder: (context, state) => MaterialPage(
+          name: state.name,
+          child: const SettingsScreen(),
+        ),
       ),
       GoRoute(
         path: RouteNames.history,
-        builder: (context, state) => const HistoryScreen(),
+        pageBuilder: (context, state) => MaterialPage(
+          name: state.name,
+          child: const HistoryScreen(),
+        ),
+      ),
+      GoRoute(
+        path: RouteNames.favorites,
+        pageBuilder: (context, state) => MaterialPage(
+          name: state.name,
+          child: const FavoritesScreen(),
+        ),
       ),
     ],
     errorBuilder: (context, state) {

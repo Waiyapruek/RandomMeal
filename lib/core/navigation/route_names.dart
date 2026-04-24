@@ -8,4 +8,5 @@ abstract class RouteNames {
   static const String presetDetail = '/presets/:id';
   static const String settings = '/settings';
   static const String history = '/history';
+  static const String favorites = '/favorites';
 }

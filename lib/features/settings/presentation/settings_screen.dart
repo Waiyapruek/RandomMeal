@@ -170,6 +170,64 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
 
+          // Favorites Section
+          Card(
+            elevation: 2,
+            shadowColor: colorScheme.primary.withOpacity(0.08),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white,
+                    colorScheme.surface.withOpacity(0.3),
+                  ],
+                ),
+              ),
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                leading: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.favorite_rounded,
+                    color: Colors.red[600],
+                    size: 24,
+                  ),
+                ),
+                title: Text(
+                  'Favorite Meals',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                subtitle: Text(
+                  'View your saved favorites',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.chevron_right_rounded,
+                  color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+                ),
+                onTap: () => context.push(RouteNames.favorites),
+              ),
+            ),
+          ),
+
           const SizedBox(height: 24),
 
           // About Section

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/preset.dart';
+import '../utils/image_utils.dart';
 
 /// Shows a detail dialog for a [Meal], matching the app's standard card style.
 ///
@@ -64,7 +65,7 @@ void showMealDetailDialog(
                         aspectRatio: 16 / 9,
                         child: meal.imageUrl != null
                             ? Image.network(
-                                meal.imageUrl!,
+                                optimizeImageUrl(meal.imageUrl, width: 500, height: 400),
                                 fit: BoxFit.cover,
                                 loadingBuilder:
                                     (context, child, loadingProgress) {
@@ -170,7 +171,7 @@ void showMealDetailDialog(
                       ],
                       const SizedBox(height: 16),
                       Text(
-                        meal.detail,
+                        meal.detail ?? 'No details available',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                           height: 1.6,

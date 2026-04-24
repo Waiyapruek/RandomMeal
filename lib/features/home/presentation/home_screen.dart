@@ -1,8 +1,10 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../services/firebase_service.dart';
+import '../../../core/theme/theme_provider.dart';
+import '../../../core/navigation/route_names.dart';
+import '../../../core/utils/image_utils.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -12,6 +14,8 @@ class HomeScreen extends ConsumerWidget {
     final presetsAsync = ref.watch(presetsProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final themeMode = ref.watch(themeProvider);
+    final isDarkMode = themeMode == ThemeMode.dark;
 
     return Scaffold(
       appBar: AppBar(
@@ -19,11 +23,46 @@ class HomeScreen extends ConsumerWidget {
         elevation: 0,
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: IconButton(
-              icon: const Icon(Icons.settings_rounded),
-              onPressed: () => context.push('/settings'),
-              tooltip: 'Settings',
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: Container(
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.wb_sunny_rounded,
+                      size: 20,
+                      color: !isDarkMode
+                          ? Colors.orange
+                          : colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 4),
+                    Switch(
+                      value: isDarkMode,
+                      onChanged: (value) {
+                        ref.read(themeProvider.notifier).state =
+                            value ? ThemeMode.dark : ThemeMode.light;
+                      },
+                      activeColor: colorScheme.primary,
+                      inactiveTrackColor:
+                          colorScheme.surfaceContainerHighest,
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.nightlight_rounded,
+                      size: 20,
+                      color: isDarkMode
+                          ? colorScheme.primary
+                          : colorScheme.onSurfaceVariant,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
@@ -43,34 +82,90 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Error loading presets',
+                "Can't read database",
                 style: theme.textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '$error',
-                style: theme.textTheme.bodyMedium,
-                textAlign: TextAlign.center,
               ),
             ],
           ),
         ),
-        data: (presets) => Padding(
-          padding: const EdgeInsets.only(top: 12, left: 16, right: 16, bottom: 16),
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 0.92,
-            ),
-            itemCount: presets.length,
-            itemBuilder: (context, index) {
-              final preset = presets[index];
-              return _PresetCard(preset: preset);
-            },
+        data: (presets) => presets.isEmpty
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.restaurant_menu_rounded,
+                      size: 56,
+                      color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No presets available',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Add presets to Firestore to get started',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              )
+            : Padding(
+                padding: const EdgeInsets.only(top: 12, left: 16, right: 16, bottom: 16),
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.80,
+                  ),
+                  itemCount: presets.length,
+                  itemBuilder: (context, index) {
+                    final preset = presets[index];
+                    return _PresetCard(preset: preset);
+                  },
+                ),
+              ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0,
+        elevation: 8,
+        backgroundColor: colorScheme.surface,
+        selectedItemColor: colorScheme.primary,
+        unselectedItemColor: colorScheme.onSurfaceVariant.withOpacity(0.6),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_rounded),
+            label: 'Home',
           ),
-        ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite_rounded),
+            label: 'Favorites',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history_rounded),
+            label: 'History',
+          ),
+        ],
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              context.go(RouteNames.home);
+              break;
+            case 1:
+              context.go(RouteNames.favorites);
+              break;
+            case 2:
+              context.go(RouteNames.history);
+              break;
+          }
+        },
       ),
     );
   }
@@ -123,7 +218,7 @@ class _PresetCard extends StatelessWidget {
                     children: [
                       preset.imageUrl != null
                           ? Image.network(
-                              preset.imageUrl!,
+                              optimizeImageUrl(preset.imageUrl, width: 500, height: 400),
                               fit: BoxFit.cover,
                               loadingBuilder:
                                   (context, child, loadingProgress) {
@@ -187,6 +282,16 @@ class _PresetCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
+                        Text(
+                          preset.description,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                            height: 1.3,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -222,18 +327,6 @@ class _PresetCard extends StatelessWidget {
                               ),
                             ),
                           ],
-                        ),
-                        const SizedBox(height: 6),
-                        Expanded(
-                          child: Text(
-                            preset.description,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                              height: 1.3,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
                         ),
                       ],
                     ),

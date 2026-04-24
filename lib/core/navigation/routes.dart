@@ -1,9 +1,9 @@
 import 'package:go_router/go_router.dart';
-import 'package:randommeal/features/home/presentation/home_screen.dart';
-import 'package:randommeal/features/randomizer/presentation/random_screen.dart';
-import 'package:randommeal/features/presets/presentation/preset_detail_screen.dart';
-import 'package:randommeal/features/settings/presentation/settings_screen.dart';
-import 'package:randommeal/features/history/presentation/history_screen.dart';
+import 'package:RandomMeal/features/home/presentation/home_screen.dart';
+import 'package:RandomMeal/features/randomizer/presentation/random_screen.dart';
+import 'package:RandomMeal/features/presets/presentation/preset_detail_screen.dart';
+import 'package:RandomMeal/features/settings/presentation/settings_screen.dart';
+import 'package:RandomMeal/features/history/presentation/history_screen.dart';
 import 'route_names.dart';
 
 /// Application routes configuration

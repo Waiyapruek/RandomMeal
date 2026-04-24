@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
-import 'package:randommeal/core/theme/theme_provider.dart';
+import 'package:RandomMeal/core/theme/theme_provider.dart';
+import 'package:RandomMeal/core/utils/image_utils.dart';
 import 'firebase_options.dart';
 import 'core/navigation/app_router.dart';
 
@@ -12,6 +13,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   usePathUrlStrategy(); // Enable clean URLs without #
+  initializeImageCache(); // Optimize image caching
   runApp(
     const ProviderScope(
       // Required for Riverpod

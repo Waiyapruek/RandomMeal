@@ -135,67 +135,10 @@ class SpinWheelPainter extends CustomPainter {
         true,
         strokePaint,
       );
-
-      // Draw meal name text
-      _drawMealName(
-        canvas,
-        center,
-        textRadius,
-        startAngle,
-        sweepAngle,
-        meals[i].name,
-        fontSize,
-      );
     }
 
     // Draw outer circle border
     canvas.drawCircle(center, radius, strokePaint);
-  }
-
-  void _drawMealName(
-    Canvas canvas,
-    Offset center,
-    double textRadius,
-    double startAngle,
-    double sweepAngle,
-    String mealName,
-    double fontSize,
-  ) {
-    // Calculate the angle at middle of the slice
-    final midAngle = startAngle + sweepAngle / 2;
-
-    // Position text at the computed textRadius from center
-    final textOffset = Offset(
-      center.dx + textRadius * cos(midAngle),
-      center.dy + textRadius * sin(midAngle),
-    );
-
-    // Create TextPainter for the meal name
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: mealName,
-        style: TextStyle(
-          color: Colors.black,
-          fontSize: fontSize,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-
-    textPainter.layout();
-
-    // Rotate text so it points radially toward the center of wheel
-    canvas.save();
-    canvas.translate(textOffset.dx, textOffset.dy);
-    // Rotate by midAngle + pi to make text point inward toward center
-    canvas.rotate(midAngle + pi);
-    // Draw text centered at this position
-    textPainter.paint(
-      canvas,
-      Offset(-textPainter.width / 2, -textPainter.height / 2),
-    );
-    canvas.restore();
   }
 
   @override

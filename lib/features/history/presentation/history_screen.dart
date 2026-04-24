@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/widgets/meal_detail_dialog.dart';
 import '../../randomizer/presentation/random_provider.dart';
+import '../../../core/navigation/route_names.dart';
+import '../../../core/utils/image_utils.dart';
 
 class HistoryScreen extends ConsumerWidget {
   const HistoryScreen({super.key});
@@ -32,7 +35,7 @@ class HistoryScreen extends ConsumerWidget {
                     child: Icon(
                       Icons.history_rounded,
                       size: 40,
-                      color: colorScheme.primary,
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -73,6 +76,40 @@ class HistoryScreen extends ConsumerWidget {
                 );
               },
             ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 2,
+        elevation: 8,
+        backgroundColor: colorScheme.surface,
+        selectedItemColor: colorScheme.primary,
+        unselectedItemColor: colorScheme.onSurfaceVariant.withOpacity(0.6),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_rounded),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite_rounded),
+            label: 'Favorites',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history_rounded),
+            label: 'History',
+          ),
+        ],
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              context.go(RouteNames.home);
+              break;
+            case 1:
+              context.go(RouteNames.favorites);
+              break;
+            case 2:
+              context.go(RouteNames.history);
+              break;
+          }
+        },
+      ),
     );
   }
 }
@@ -114,7 +151,7 @@ class _HistoryTile extends StatelessWidget {
                 clipBehavior: Clip.antiAlias,
                 child: entry.meal.imageUrl != null
                     ? Image.network(
-                        entry.meal.imageUrl!,
+                        optimizeImageUrl(entry.meal.imageUrl, width: 200, height: 200),
                         fit: BoxFit.cover,
                         loadingBuilder: (context, child, loadingProgress) {
                           if (loadingProgress == null) return child;
@@ -189,7 +226,7 @@ class _HistoryTile extends StatelessWidget {
               // Trailing chevron
               Icon(
                 Icons.chevron_right_rounded,
-                color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+                color: colorScheme.onSurfaceVariant,
               ),
             ],
           ),
